@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, unused_local_variable
+
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -32,24 +34,39 @@ class _HomePageState extends State<HomePage> {
 
   Future iniRecorder() async {
     final status = await Permission.microphone.request();
+
     if (status != PermissionStatus.granted) {
       throw 'Microphone permission not granted';
     }
+
     await recorder.openRecorder();
+
     isRecordReady = true;
-    recorder.setSubscriptionDuration(const Duration(microseconds: 500));
+
+    recorder.setSubscriptionDuration(
+      const Duration(milliseconds: 500),
+    );
   }
 
   Future record() async {
     if (!isRecordReady) return;
-    await recorder.startRecorder(toFile: 'audio');
+    try {
+      await recorder.startRecorder(toFile: 'audio');
+    } catch (e) {
+      print('Error starting recorder: $e');
+    }
   }
 
   Future stop() async {
     if (!isRecordReady) return;
-    final path = await recorder.stopRecorder();
-    final audioFile = File(path!);
-    print(audioFile);
+    try {
+      final path = await recorder.stopRecorder();
+      final audioFile = File(path!);
+
+      print(audioFile);
+    } catch (e) {
+      print('Error stopping recorder: $e');
+    }
   }
 
   @override
@@ -61,11 +78,28 @@ class _HomePageState extends State<HomePage> {
           child: Image.asset('assets/Nenas.png'),
         );
 
-    // Text buildTimerRecorded() => Text(
-    //       'Time Recorded: ${const Duration(seconds: 0).toString().split('.').first}',
-    //       style: const TextStyle(fontSize: 16, color: Color(0xff679344)),
-    //     );
-    // StreamBuilder buildTimerRecorded() => ;
+    StreamBuilder<RecordingDisposition> buildRecorderTimer() {
+      return StreamBuilder<RecordingDisposition>(
+        stream: recorder.onProgress,
+        builder: (context, snapshot) {
+          final duration =
+              snapshot.hasData ? snapshot.data!.duration : Duration.zero;
+
+          print("INI LOG:: ${snapshot.data!.duration}");
+
+          String twoDigits(int n) => n.toString().padLeft(2, "0");
+
+          final twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+
+          final twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+
+          return Text(
+            "Time Recorded: $twoDigitMinutes:$twoDigitSeconds",
+            style: const TextStyle(fontSize: 16, color: Color(0xff679344)),
+          );
+        },
+      );
+    }
 
     SizedBox buildBtnRecording() => SizedBox(
           width: 250,
@@ -174,28 +208,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           buildIconWidget(),
           const SizedBox(height: 20),
-          StreamBuilder<RecordingDisposition>(
-            stream: recorder.onProgress,
-            builder: (context, snapshot) {
-              final duration =
-                  snapshot.hasData ? snapshot.data!.duration : Duration.zero;
-
-              print("INI LOG:: ${duration.inMilliseconds}");
-
-              String twoDigits(int n) => n.toString().padLeft(2, "$n");
-
-              final twoDigitMinutes =
-                  twoDigits(duration.inMinutes.remainder(60));
-
-              final twoDigitSeconds =
-                  twoDigits(duration.inSeconds.remainder(60));
-
-              return Text(
-                "Time Recorded: $twoDigitMinutes:$twoDigitSeconds",
-                style: const TextStyle(fontSize: 16, color: Color(0xff679344)),
-              );
-            },
-          ),
+          buildRecorderTimer(),
           const SizedBox(height: 20),
           buildBtnRecording(),
           const SizedBox(height: 10),
