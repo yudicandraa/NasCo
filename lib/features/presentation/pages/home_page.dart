@@ -61,12 +61,16 @@ class _HomePageState extends State<HomePage> {
     if (!isRecordReady) return;
     try {
       final path = await recorder.stopRecorder();
-      final audioFile = File(path!);
+      final audioFile = File(path.toString());
 
-      print(audioFile);
+      predictRecorder(audioFile.path);
     } catch (e) {
       print('Error stopping recorder: $e');
     }
+  }
+
+  void predictRecorder(String audioPath) {
+    context.read<PredictionBloc>().add(OnCreatePredictAudio(audioPath));
   }
 
   @override
@@ -84,8 +88,6 @@ class _HomePageState extends State<HomePage> {
         builder: (context, snapshot) {
           final duration =
               snapshot.hasData ? snapshot.data!.duration : Duration.zero;
-
-          print("INI LOG:: ${snapshot.data!.duration}");
 
           String twoDigits(int n) => n.toString().padLeft(2, "0");
 
