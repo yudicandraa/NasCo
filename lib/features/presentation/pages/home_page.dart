@@ -1,11 +1,11 @@
 // ignore_for_file: avoid_print, unused_local_variable
 
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_sound/public/flutter_sound_recorder.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:watermelon_sound/features/presentation/bloc/prediction_bloc.dart';
 
@@ -27,7 +27,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  void dispose() {
+void dispose() {
     recorder.closeRecorder();
     super.dispose();
   }
@@ -51,7 +51,12 @@ class _HomePageState extends State<HomePage> {
   Future record() async {
     if (!isRecordReady) return;
     try {
-      await recorder.startRecorder(toFile: 'audio');
+      final directory = await getApplicationDocumentsDirectory();
+      final pathToFile = '${directory.path}/audio.wav';
+      await recorder.startRecorder(
+        toFile: pathToFile,
+        codec: Codec.pcm16WAV,
+      );
     } catch (e) {
       print('Error starting recorder: $e');
     }
@@ -61,9 +66,12 @@ class _HomePageState extends State<HomePage> {
     if (!isRecordReady) return;
     try {
       final path = await recorder.stopRecorder();
-      final audioFile = File(path.toString());
-
-      predictRecorder(audioFile.path);
+      if (path == null) {
+        print('No file was recorded.');
+        return;
+      }
+      final audioFile = File(path);
+      print('Path of recorded file: ${audioFile.path}');
     } catch (e) {
       print('Error stopping recorder: $e');
     }

@@ -1,4 +1,4 @@
 class Urls {
-  static const String baseUrl = 'https://0f1d-36-85-110-108.ngrok-free.app';
+  static const String baseUrl = 'https://86f7-180-241-47-80.ngrok-free.app';
   static String createPredictAudio() => '$baseUrl/upload_audio/';
 }

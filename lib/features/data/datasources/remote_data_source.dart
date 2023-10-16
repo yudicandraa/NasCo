@@ -29,6 +29,8 @@ class PredictRemoteDataSourceImpl extends PredictRemoteDataSource {
 
     var response = await http.Response.fromStream(streamedResponse);
 
+    print(response.body);
+
     if (response.statusCode == 200) {
       return PredictionModel.fromJson(json.decode(response.body));
     } else {
